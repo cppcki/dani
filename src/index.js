@@ -14,17 +14,22 @@ const client = new Client({
 });
 
 const pharses = [
+  "urmom",
+  "deeznuts",
   "deez nuts essentially",
   "urmom essentially",
-  "deric is cool essentially",
-  "bryan is opai essentially",
+  "bryan is opai",
   "how was ur poop?",
+  "i hate it here on god",
+  "ogm deric is so cool",
 ];
 
 const triggers = [
   {
     message: "dani",
-    reply: pharses[Math.floor(Math.random() * pharses.length)]
+    reply: () => {
+      return pharses[Math.floor(Math.random() * pharses.length)]
+    }
   },
   {
     message: "deric sucks",
@@ -33,17 +38,38 @@ const triggers = [
   {
     message: "deez nuts",
     reply: "gotem"
+  },
+  {
+    message: ["👉 👈", "👉👈"],
+    reply: {
+      "files": ["https://i.imgur.com/5k2Rb0y.png"]
+    }
   }
 ];
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
+  function execute(currentPhrase) {
+    const channelId = message.channelId;
+    const channel = client.channels.cache.get(channelId);
+    if (currentPhrase.reply instanceof Function) {
+      channel.send(currentPhrase.reply());
+    } else {
+      channel.send(currentPhrase.reply);
+    }
+  }
+
+  // Iterates through all the triggers` objects.
   for (const trigger of triggers) {
-    if (message.content.includes(trigger.message)) {
-      const channelId = message.channelId;
-      const channel = client.channels.cache.get(channelId);
-      channel.send(trigger.reply);
+    // Check if there's many to one relationship to a certain trigger's message.
+    if (Array.isArray(trigger.message)) {
+      const hasMatch = trigger.message.some(phrase => message.content.includes(phrase));
+      hasMatch && execute(trigger);
+    } else {
+      if (message.content.includes(trigger.message)) {
+        execute(trigger);
+      }
     }
   }
 
