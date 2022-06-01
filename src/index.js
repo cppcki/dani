@@ -42,7 +42,7 @@ const triggers = [
   {
     message: ["👉 👈", "👉👈"],
     reply: {
-      "files": ["https://i.imgur.com/5k2Rb0y.png"]
+      "files": ["https://i.imgur.com/R1hRfvV.png"]
     }
   }
 ];
