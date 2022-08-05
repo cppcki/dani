@@ -2,16 +2,23 @@ require('dotenv').config();
 
 const { 
   Client, 
-  Intents 
+  Partials,
+  GatewayIntentBits,
 } = require("discord.js");
 
-const client = new Client({
-  intents: [
-    Intents.FLAGS.GUILDS, 
-    Intents.FLAGS.GUILD_MESSAGES
-  ],
-  partials: ['MESSAGE', 'CHANNEL']
-});
+const DEBUG = process.env.DEBUG;
+const DISCORD_TOKEN = DEBUG ? process.env.TEST_DISCORD_TOKEN : process.env.DISCORD_TOKEN;
+
+const client = new Client(
+  { 
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent
+    ],
+    prtials: [Partials.Channel]
+  }
+);
 
 const pharses = [
   "urmom",
@@ -75,8 +82,35 @@ client.on("messageCreate", async (message) => {
 
 });
 
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  const { commandName } = interaction;
+  try {
+    switch(commandName) {
+      case "createqr":
+        const url = interaction.options.getString("url");
+        const size = interaction.options.getInteger("size") || 500;
+
+        if (!url.includes("http")) {
+          await interaction.reply("You either didn't input a valid URL or you forgot to include 'https://' or 'http://' in front of your URL.");
+          break;
+        }
+
+        interaction.channel.send(`Here's your QR code for ${url}`);
+        await interaction.reply(`https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${url}`);
+
+        break;
+      default:
+        await interaction.reply("Invalid command.");
+    }
+  } catch(error) {
+    interaction.reply("error:", error.message);
+  }
+});
+
 client.on("ready", () => {
+  console.log("DEBUG:", DEBUG);
   console.log(`Loggined in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(DISCORD_TOKEN);
